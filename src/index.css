@@ -1,0 +1,52 @@
+@import "tailwindcss";
+
+:root {
+  --brand-color: #e83330;
+  --brand-color-hover: #c82e2c;
+  --brand-color-light: #fdecec;
+  --brand-border-light: #fee2e2;
+}
+
+[data-theme-color="blue"] {
+  --brand-color: #2563eb;
+  --brand-color-hover: #1d4ed8;
+  --brand-color-light: #eff6ff;
+  --brand-border-light: #dbeafe;
+}
+
+[data-theme-color="green"] {
+  --brand-color: #059669;
+  --brand-color-hover: #047857;
+  --brand-color-light: #ecfdf5;
+  --brand-border-light: #d1fae5;
+}
+
+[data-theme-color="purple"] {
+  --brand-color: #7c3aed;
+  --brand-color-hover: #6d28d9;
+  --brand-color-light: #f5f3ff;
+  --brand-border-light: #ede9fe;
+}
+
+[data-theme-color="orange"] {
+  --brand-color: #ea580c;
+  --brand-color-hover: #c2410c;
+  --brand-color-light: #fff7ed;
+  --brand-border-light: #ffedd5;
+}
+
+@theme {
+  --font-sans: "Outfit", "Outfit, sans-serif", ui-sans-serif, system-ui;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  
+  --color-brand: var(--brand-color);
+  --color-brand-hover: var(--brand-color-hover);
+  --color-brand-light: var(--brand-color-light);
+  --color-brand-border: var(--brand-border-light);
+}
+
+/* Custom focus styles to assure WCAG AA compliance */
+*:focus-visible {
+  outline: 2px solid var(--brand-color);
+  outline-offset: 2px;
+}
