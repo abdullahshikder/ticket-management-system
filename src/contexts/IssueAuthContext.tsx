@@ -32,18 +32,7 @@ export function IssueAuthProvider({ children }: { children: ReactNode }) {
     if (stored) {
       try { return JSON.parse(stored); } catch { return null; }
     }
-    const demoUser: IssueUser = {
-      id: generateId(),
-      full_name: 'Demo Reporter',
-      email: 'reporter@pathao.com',
-      phone: '',
-      team: 'Merchant Operations',
-      role: 'reporter',
-    };
-    localStorage.setItem('issue_user', JSON.stringify(demoUser));
-    localStorage.setItem('issue_user_id', demoUser.id);
-    localStorage.setItem('issue_user_role', demoUser.role);
-    return demoUser;
+    return null;
   });
 
   useEffect(() => {

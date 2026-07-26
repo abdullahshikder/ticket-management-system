@@ -65,7 +65,7 @@ export default function Layout() {
                 <div className="text-xs font-bold text-gray-900 truncate">{user.full_name}</div>
                 <div className="text-[10px] text-gray-500 truncate">{user.email}</div>
               </div>
-              <button onClick={logout} className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors cursor-pointer" title="Log out">
+              <button onClick={() => { logout(); navigate('/login'); }} className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors cursor-pointer" title="Log out">
                 <LogOut size={14} />
               </button>
             </div>
