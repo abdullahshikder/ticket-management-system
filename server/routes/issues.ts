@@ -919,6 +919,32 @@ router.put('/admin/users/:id', (req: Request, res: Response) => {
   res.json({ user });
 });
 
+// Auth - find or create user by email (no auth headers required)
+router.post('/auth/login', (req: Request, res: Response) => {
+  const { email, full_name } = req.body;
+  if (!email) return res.status(400).json({ error: 'Email is required' });
+
+  const db = getDb();
+  let user = db.prepare('SELECT id, full_name, email, phone, team, role, status, created_at FROM issue_users WHERE email = ?').get(email) as any;
+
+  if (user) {
+    if (full_name && full_name !== user.full_name) {
+      db.prepare('UPDATE issue_users SET full_name = ? WHERE id = ?').run(full_name, user.id);
+      user.full_name = full_name;
+    }
+  } else {
+    const id = generateId();
+    const name = full_name || email.split('@')[0];
+    const team = '';
+    const role = 'reporter';
+    db.prepare('INSERT INTO issue_users (id, full_name, email, phone, team, role) VALUES (?, ?, ?, ?, ?, ?)')
+      .run(id, name, email, '', team, role);
+    user = db.prepare('SELECT id, full_name, email, phone, team, role, status, created_at FROM issue_users WHERE id = ?').get(id);
+  }
+
+  res.json({ user });
+});
+
 // Upload serving
 router.get('/uploads/*', (req: Request, res: Response) => {
   const storageKey = req.params[0];

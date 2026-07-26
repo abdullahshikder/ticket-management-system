@@ -8,6 +8,11 @@ function getHeaders() {
 }
 
 export const issueService = {
+  async login(email: string, fullName?: string): Promise<{ user: { id: string; full_name: string; email: string; phone: string; team: string; role: string } }> {
+    const { data } = await api.post('/auth/login', { email, full_name: fullName });
+    return data;
+  },
+
   async getFormConfig(): Promise<FormConfig> {
     const { data } = await api.get('/form-config', { headers: getHeaders() });
     return data;

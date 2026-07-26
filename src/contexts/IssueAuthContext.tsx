@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
+import { issueService } from '../services/issueService';
 
 interface IssueUser {
   id: string;
@@ -14,7 +15,7 @@ interface IssueAuthContextValue {
   isAuthenticated: boolean;
   isInternal: boolean;
   isAdmin: boolean;
-  login: (email: string, name?: string) => IssueUser;
+  login: (email: string, name?: string) => Promise<IssueUser>;
   loginAs: (user: IssueUser) => void;
   logout: () => void;
   updateUser: (updates: Partial<IssueUser>) => void;
@@ -47,17 +48,32 @@ export function IssueAuthProvider({ children }: { children: ReactNode }) {
     }
   }, [user]);
 
-  const login = useCallback((email: string, name?: string): IssueUser => {
-    const newUser: IssueUser = {
-      id: generateId(),
-      full_name: name || email.split('@')[0],
-      email,
-      phone: '',
-      team: '',
-      role: 'reporter',
-    };
-    setUser(newUser);
-    return newUser;
+  const login = useCallback(async (email: string, name?: string): Promise<IssueUser> => {
+    try {
+      const res = await issueService.login(email, name);
+      const u = res.user;
+      const issueUser: IssueUser = {
+        id: u.id,
+        full_name: u.full_name,
+        email: u.email,
+        phone: u.phone || '',
+        team: u.team || '',
+        role: u.role as IssueUser['role'],
+      };
+      setUser(issueUser);
+      return issueUser;
+    } catch {
+      const fallback: IssueUser = {
+        id: generateId(),
+        full_name: name || email.split('@')[0],
+        email,
+        phone: '',
+        team: '',
+        role: 'reporter',
+      };
+      setUser(fallback);
+      return fallback;
+    }
   }, []);
 
   const loginAs = useCallback((u: IssueUser) => {

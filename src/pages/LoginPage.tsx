@@ -1,41 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Bug, Loader2 } from 'lucide-react';
 import { useIssueAuth } from '../contexts/IssueAuthContext';
-
-const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
-
-declare global {
-  interface Window {
-    google?: {
-      accounts: {
-        id: {
-          initialize: (config: {
-            client_id: string;
-            callback: (response: { credential: string }) => void;
-            auto_select?: boolean;
-            cancel_on_tap_outside?: boolean;
-          }) => void;
-          renderButton: (
-            element: HTMLElement,
-            options: { theme?: string; size?: string; text?: string; width?: string }
-          ) => void;
-          prompt: () => void;
-        };
-      };
-    };
-  }
-}
-
-function decodeJWT(token: string): { email: string; name: string; picture?: string; sub: string } | null {
-  try {
-    const payload = token.split('.')[1];
-    const decoded = atob(payload.replace(/-/g, '+').replace(/_/g, '/'));
-    return JSON.parse(decoded);
-  } catch {
-    return null;
-  }
-}
 
 export default function LoginPage() {
   const { login } = useIssueAuth();
@@ -43,52 +9,19 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
-  const [googleReady, setGoogleReady] = useState(false);
-  const googleButtonRef = useRef<HTMLDivElement>(null);
+  const [error, setError] = useState('');
 
-  useEffect(() => {
-    if (!GOOGLE_CLIENT_ID) return;
-    if (document.querySelector('script[src*="accounts.google.com/gsi/client"]')) {
-      if (window.google) setGoogleReady(true);
-      return;
-    }
-    const script = document.createElement('script');
-    script.src = 'https://accounts.google.com/gsi/client';
-    script.async = true;
-    script.defer = true;
-    script.onload = () => setGoogleReady(true);
-    document.body.appendChild(script);
-  }, []);
-
-  useEffect(() => {
-    if (!googleReady || !googleButtonRef.current || !GOOGLE_CLIENT_ID) return;
-    try {
-      window.google!.accounts.id.initialize({
-        client_id: GOOGLE_CLIENT_ID,
-        callback: (response: { credential: string }) => {
-          const info = decodeJWT(response.credential);
-          if (info) {
-            login(info.email, info.name);
-            navigate('/issues/report');
-          }
-        },
-        auto_select: false,
-        cancel_on_tap_outside: false,
-      });
-      window.google!.accounts.id.renderButton(googleButtonRef.current, {
-        theme: 'outline',
-        size: 'large',
-        text: 'signin_with',
-        width: '320',
-      });
-    } catch {}
-  }, [googleReady, login, navigate]);
-
-  const handleEmailLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    login(email, name || undefined);
-    navigate('/issues/report');
+    setError('');
+    try {
+      await login(email, name || undefined);
+      navigate('/issues/report');
+    } catch {
+      setError('Failed to sign in. Please try again.');
+    }
+    setLoading(false);
   };
 
   return (
@@ -102,20 +35,13 @@ export default function LoginPage() {
           <p className="text-sm text-gray-500">Sign in to report and track issues</p>
         </div>
 
-        {GOOGLE_CLIENT_ID && (
-          <>
-            <div className="flex justify-center" ref={googleButtonRef}>
-              {!googleReady && <Loader2 size={20} className="animate-spin text-gray-400" />}
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="flex-1 h-px bg-gray-200" />
-              <span className="text-xs font-semibold text-gray-400">or continue with email</span>
-              <div className="flex-1 h-px bg-gray-200" />
-            </div>
-          </>
+        {error && (
+          <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-xs text-red-700 font-semibold text-center">
+            {error}
+          </div>
         )}
 
-        <form onSubmit={handleEmailLogin} className="space-y-4">
+        <form onSubmit={handleLogin} className="space-y-4">
           <div className="space-y-1">
             <label className="text-xs font-bold text-gray-700">Work email</label>
             <input type="email" required value={email} onChange={e => setEmail(e.target.value)}
@@ -131,14 +57,12 @@ export default function LoginPage() {
           <button type="submit" disabled={loading}
             className="w-full py-2.5 bg-[#e83330] text-white rounded-lg text-sm font-bold hover:bg-[#c82e2c] disabled:opacity-50 transition-colors cursor-pointer flex items-center justify-center gap-2">
             {loading ? <Loader2 size={14} className="animate-spin" /> : null}
-            Sign In
+            {loading ? 'Signing in...' : 'Sign In'}
           </button>
         </form>
 
         <p className="text-xs text-gray-400 text-center leading-relaxed">
-          {GOOGLE_CLIENT_ID
-            ? 'Sign in with your Google Workspace account or use your email above.'
-            : 'Enter your work email to get started. A team member will verify your access.'}
+          Sign in with your work email. Returning users are recognised automatically.
         </p>
       </div>
     </div>
